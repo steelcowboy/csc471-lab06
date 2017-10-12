@@ -1,8 +1,8 @@
 /* Lab 6 base code - transforms using matrix stack built on glm
-	CPE 471 Cal Poly Z. Wood + S. Sueda + I. Dunn
-*/
-#include <iostream>
+ * CPE 471 Cal Poly Z. Wood + S. Sueda + I. Dunn
+ */
 
+#include <iostream>
 #include <glad/glad.h>
 
 #include "GLSL.h"
@@ -117,34 +117,34 @@ public:
 		prog->bind();
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix()));
 
-		/* draw bottom cube */
+		// draw bottom cube
 		MV->pushMatrix();
 			MV->loadIdentity();
-			//draw the bottom cube with these 'global transforms'
+			// draw the bottom cube with these 'global transforms'
 			MV->translate(vec3(0, 0, -5));
 			MV->scale(vec3(0.75, 0.75, 0.75));
 			glUniformMatrix4fv(prog->getUniform("MV"), 1, GL_FALSE, value_ptr(MV->topMatrix()));
 			shape->draw(prog);
 			// draw the bottom cubes 'arm' - relative to the position of the bottom cube
-			//note you must change this to TWO jointed arm with hand
+			// note you must change this to TWO jointed arm with hand
 			MV->pushMatrix();
-				//place at shoulder
+				// place at shoulder
 				MV->translate(vec3(1, 1, 0));
-				//rotate shoulder joint
+				// rotate shoulder joint
 				MV->rotate(sTheta, vec3(0, 0, 1));
-				//move to shoulder joint
+				// move to shoulder joint
 				MV->translate(vec3(1.5, 0, 0));
-				//non-uniform scale
+				// non-uniform scale
 				MV->scale(vec3(1.5, 0.25, 0.25));
 				glUniformMatrix4fv(prog->getUniform("MV"), 1, GL_FALSE, value_ptr(MV->topMatrix()));
 				shape->draw(prog);
 			MV->popMatrix();
 		MV->popMatrix();
 
-		/* draw top cube - aka head */
+		// draw top cube - aka head
 		MV->pushMatrix();
 			MV->loadIdentity();
-			/*play with these options */
+			// play with these options
 			MV->translate(vec3(0, 1.1, -5));
 			MV->rotate(0.5, vec3(0, 1, 0));
 			MV->scale(vec3(0.5, 0.5, 0.5));
@@ -158,7 +158,7 @@ public:
 		// Pop matrix stacks.
 		P->popMatrix();
 
-		/* update shoulder angle - animate */
+		// update shoulder angle - animate
 		if (sTheta < 1.4)
 		{
 			sTheta += 0.01;
