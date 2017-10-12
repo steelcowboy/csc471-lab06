@@ -51,7 +51,8 @@ public:
 	{
 		double posX, posY;
 
-		if (action == GLFW_PRESS) {
+		if (action == GLFW_PRESS)
+		{
 			 glfwGetCursorPos(window, &posX, &posY);
 			 cout << "Pos X " << posX <<  " Pos Y " << posY << endl;
 		}
@@ -67,6 +68,7 @@ public:
 		GLSL::checkVersion();
 
 		sTheta = 0;
+
 		// Set background color.
 		glClearColor(.12f, .34f, .56f, 1.0f);
 		// Enable z-buffer test.
