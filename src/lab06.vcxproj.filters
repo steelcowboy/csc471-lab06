@@ -10,16 +10,19 @@
     <ClCompile Include="WindowManager.cpp" />
     <ClCompile Include="Shape.cpp" />
     <ClCompile Include="MatrixStack.cpp" />
+    <ClCompile Include="..\ext\tiny_obj_loader\tiny_obj_loader.cpp">
+      <Filter>ext</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Program.h" />
     <ClInclude Include="GLSL.h" />
     <ClInclude Include="WindowManager.h" />
     <ClInclude Include="Shape.h" />
-    <ClInclude Include="tiny_obj_loader.h">
+    <ClInclude Include="MatrixStack.h" />
+    <ClInclude Include="..\ext\tiny_obj_loader\tiny_obj_loader.h">
       <Filter>ext</Filter>
     </ClInclude>
-    <ClInclude Include="MatrixStack.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ext">
