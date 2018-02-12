@@ -81,7 +81,8 @@ public:
 		prog->setShaderNames(resourceDirectory + "/simple_vert.glsl", resourceDirectory + "/simple_frag.glsl");
 		prog->init();
 		prog->addUniform("P");
-		prog->addUniform("MV");
+		prog->addUniform("V");
+		prog->addUniform("M");
 		prog->addAttribute("vertPos");
 		prog->addAttribute("vertNor");
 	}
@@ -109,61 +110,68 @@ public:
 		float aspect = width/(float)height;
 
 		// Create the matrix stacks - please leave these alone for now
-		auto P = make_shared<MatrixStack>();
-		auto MV = make_shared<MatrixStack>();
+		auto Projection = make_shared<MatrixStack>();
+		auto View = make_shared<MatrixStack>();
+		auto Model = make_shared<MatrixStack>();
+
 		// Apply perspective projection.
-		P->pushMatrix();
-		P->perspective(45.0f, aspect, 0.01f, 100.0f);
+		Projection->pushMatrix();
+		Projection->perspective(45.0f, aspect, 0.01f, 100.0f);
+
+		// View is identity - for now
+		View->pushMatrix();
 
 		// Draw a stack of cubes with indiviudal transforms
 		prog->bind();
-		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix()));
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
 
 		// draw bottom cube
-		MV->pushMatrix();
-			MV->loadIdentity();
+		Model->pushMatrix();
+			Model->loadIdentity();
 			// draw the bottom cube with these 'global transforms'
-			MV->translate(vec3(0, 0, -5));
-			MV->scale(vec3(0.75, 0.75, 0.75));
-			glUniformMatrix4fv(prog->getUniform("MV"), 1, GL_FALSE, value_ptr(MV->topMatrix()));
+			Model->translate(vec3(0, 0, -5));
+			Model->scale(vec3(0.75, 0.75, 0.75));
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
 			shape->draw(prog);
 			// draw the bottom cubes 'arm' - relative to the position of the bottom cube
 			// note you must change this to TWO jointed arm with hand
-			MV->pushMatrix();
+			Model->pushMatrix();
 				// place at shoulder
-				MV->translate(vec3(1, 1, 0));
+				Model->translate(vec3(1, 1, 0));
 				// rotate shoulder joint
-				MV->rotate(sTheta, vec3(0, 0, 1));
+				Model->rotate(sTheta, vec3(0, 0, 1));
 				// move to shoulder joint
-				MV->translate(vec3(1.5, 0, 0));
+				Model->translate(vec3(1.5, 0, 0));
 				// non-uniform scale
-				MV->scale(vec3(1.5, 0.25, 0.25));
-				glUniformMatrix4fv(prog->getUniform("MV"), 1, GL_FALSE, value_ptr(MV->topMatrix()));
+				Model->scale(vec3(1.5, 0.25, 0.25));
+				glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
 				shape->draw(prog);
-			MV->popMatrix();
-		MV->popMatrix();
+			Model->popMatrix();
+		Model->popMatrix();
 
 		// draw top cube - aka head
-		MV->pushMatrix();
-			MV->loadIdentity();
+		Model->pushMatrix();
+			Model->loadIdentity();
 			// play with these options
-			MV->translate(vec3(0, 1.1, -5));
-			MV->rotate(0.5, vec3(0, 1, 0));
-			MV->scale(vec3(0.5, 0.5, 0.5));
-			glUniformMatrix4fv(prog->getUniform("MV"), 1, GL_FALSE, value_ptr(MV->topMatrix()));
+			Model->translate(vec3(0, 1.1, -5));
+			Model->rotate(0.5, vec3(0, 1, 0));
+			Model->scale(vec3(0.5, 0.5, 0.5));
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
 			shape->draw(prog);
-		MV->popMatrix();
+		Model->popMatrix();
 
 
 		prog->unbind();
 
 		// Pop matrix stacks.
-		P->popMatrix();
+		Projection->popMatrix();
+		View->popMatrix();
 
 		// update shoulder angle - animate
 		if (sTheta < 1.4)
 		{
-			sTheta += 0.01;
+			sTheta += 0.01f;
 		}
 	}
 };
