@@ -28,5 +28,16 @@
     <Filter Include="ext">
       <UniqueIdentifier>{a1735e5b-c01d-45eb-b937-869f0ba27591}</UniqueIdentifier>
     </Filter>
+    <Filter Include="resources">
+      <UniqueIdentifier>{67fef38a-f873-4db5-a9ae-0f8b0a2675f1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\resources\simple_frag.glsl">
+      <Filter>resources</Filter>
+    </None>
+    <None Include="..\resources\simple_vert.glsl">
+      <Filter>resources</Filter>
+    </None>
   </ItemGroup>
 </Project>
