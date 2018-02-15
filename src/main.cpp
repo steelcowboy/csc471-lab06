@@ -34,12 +34,22 @@ class Application : public EventCallbacks
         GLuint VertexBufferID;
 
         float sTheta;
+        float x_disp = 0;
 
         void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
         {
             if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
             {
                 glfwSetWindowShouldClose(window, GL_TRUE);
+            }
+            else if ( (key == GLFW_KEY_J || key == GLFW_KEY_N || key == GLFW_KEY_A) && action == GLFW_PRESS)
+            {
+                x_disp -= 0.1; 
+            }
+            // Right 
+            else if ( (key == GLFW_KEY_SEMICOLON || key == GLFW_KEY_O || key == GLFW_KEY_D) && action == GLFW_PRESS)
+            {
+                x_disp += 0.1; 
             }
         }
 
@@ -110,6 +120,9 @@ class Application : public EventCallbacks
             auto View = make_shared<MatrixStack>();
             auto Model = make_shared<MatrixStack>();
 
+            const static float shoulder_x = 1.5;
+            const static float shoulder_disp = 1;
+
             // Apply perspective projection.
             Projection->pushMatrix();
             Projection->perspective(45.0f, aspect, 0.01f, 100.0f);
@@ -124,39 +137,61 @@ class Application : public EventCallbacks
 
             // draw bottom cube
             Model->pushMatrix();
-            Model->loadIdentity();
-            // draw the bottom cube with these 'global transforms'
-            Model->translate(vec3(0, 0, -5));
-            Model->scale(vec3(0.75, 0.75, 0.75));
-            glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
-            shape->draw(prog);
-            // draw the bottom cubes 'arm' - relative to the position of the bottom cube
-            // note you must change this to TWO jointed arm with hand
-            Model->pushMatrix();
-            // place at shoulder
-            Model->translate(vec3(1, 1, 0));
-            // rotate shoulder joint
-            Model->rotate(sTheta, vec3(0, 0, 1));
-            // move to shoulder joint
-            Model->translate(vec3(1.5, 0, 0));
-            // non-uniform scale
-            Model->scale(vec3(1.5, 0.25, 0.25));
-            glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
-            shape->draw(prog);
-            Model->popMatrix();
-            Model->popMatrix();
+            {
+                Model->loadIdentity();
+                // draw the bottom cube with these 'global transforms'
+                Model->translate(vec3(x_disp, 0, -5));
+                Model->scale(vec3(0.75, 0.75, 0.75));
+                glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+                shape->draw(prog);
+                
+                // draw the bottom cubes 'arm' - relative to the position of the bottom cube
+                // note you must change this to TWO jointed arm with hand
+                Model->pushMatrix();
+                {
+                    // place at shoulder
+                    Model->translate(vec3(shoulder_disp, shoulder_disp, 0));
+                    // rotate shoulder joint
+                    Model->rotate(sTheta, vec3(0, 0, 1));
+                    // move to shoulder joint
+                    Model->translate(vec3(shoulder_x, 0, 0));
+                    // non-uniform scale
+                    Model->scale(vec3(1.5, 0.25, 0.25));
+                    glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+                    shape->draw(prog);
+                }
+                Model->popMatrix();
 
-            // draw top cube - aka head
-            Model->pushMatrix();
-            Model->loadIdentity();
-            // play with these options
-            Model->translate(vec3(0, 1.1, -5));
-            Model->rotate(0.5, vec3(0, 1, 0));
-            Model->scale(vec3(0.5, 0.5, 0.5));
-            glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
-            shape->draw(prog);
-            Model->popMatrix();
+                // Left arm
+                Model->pushMatrix();
+                {
+                    // place at shoulder
+                    Model->translate(vec3(-shoulder_disp - 0.2, shoulder_disp - 0.3, 0));
+                    // rotate shoulder joint
+                    Model->rotate(4.2, vec3(0, 0, 1));
+                    // move to shoulder joint
+                    Model->translate(vec3(shoulder_disp, 0, 0));
+                    // non-uniform scale
+                    Model->scale(vec3(1.5, 0.25, 0.25));
+                    glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+                    shape->draw(prog);
+                }
+                Model->popMatrix();
 
+                // draw top cube - aka head
+                Model->pushMatrix();
+                {
+                    Model->loadIdentity();
+                    // play with these options
+                    Model->translate(vec3(x_disp, 1.1, -5));
+                    Model->rotate(0.5, vec3(0, 1, 0));
+                    Model->scale(vec3(0.5, 0.5, 0.5));
+                    glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+                    shape->draw(prog);
+                }
+                Model->popMatrix();
+            }
+            Model->popMatrix();
 
             prog->unbind();
 
@@ -165,10 +200,10 @@ class Application : public EventCallbacks
             View->popMatrix();
 
             // update shoulder angle - animate
-            if (sTheta < 1.4)
-            {
-                sTheta += 0.01f;
-            }
+            //if (sTheta < 1.4)
+            //{
+                //sTheta += 0.01f;
+            //}
         }
 };
 
