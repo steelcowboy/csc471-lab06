@@ -11,6 +11,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <cmath>
+
 using namespace std;
 using namespace glm;
 
@@ -33,7 +35,10 @@ class Application : public EventCallbacks
         // Data necessary to give our triangle to OpenGL
         GLuint VertexBufferID;
 
-        float sTheta;
+        float upperarm_rot;
+        float forearm_rot;
+        float tmp;
+
         float x_disp = 0;
 
         void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -73,13 +78,14 @@ class Application : public EventCallbacks
         {
             GLSL::checkVersion();
 
-            sTheta = 0;
-
             // Set background color.
             glClearColor(.12f, .34f, .56f, 1.0f);
             // Enable z-buffer test.
             glEnable(GL_DEPTH_TEST);
 
+            upperarm_rot = 0;
+            forearm_rot = 0;
+            tmp = 0;
 
             // Initialize the GLSL program.
             prog = make_shared<Program>();
@@ -120,7 +126,7 @@ class Application : public EventCallbacks
             auto View = make_shared<MatrixStack>();
             auto Model = make_shared<MatrixStack>();
 
-            const static float shoulder_x = 1.5;
+            const static float shoulder_x = 1.0;
             const static float shoulder_disp = 1;
 
             // Apply perspective projection.
@@ -150,13 +156,25 @@ class Application : public EventCallbacks
                 Model->pushMatrix();
                 {
                     // place at shoulder
-                    Model->translate(vec3(shoulder_disp, shoulder_disp, 0));
+                    Model->translate(vec3(shoulder_disp, shoulder_disp + 0.1, 0));
                     // rotate shoulder joint
-                    Model->rotate(sTheta, vec3(0, 0, 1));
+                    Model->rotate(upperarm_rot, vec3(0, 0, 1));
                     // move to shoulder joint
                     Model->translate(vec3(shoulder_x, 0, 0));
+                    
+                    Model->pushMatrix();
+                    {
+                        Model->translate(vec3(0.9, 0, 0));
+                        Model->rotate(forearm_rot, vec3(0, 0, 1));
+                        Model->translate(vec3(0.4, 0, 0));
+                        Model->scale(vec3(0.5, 0.25, 0.25));
+                        glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+                        shape->draw(prog);
+                    }
+                    Model->popMatrix();
+
                     // non-uniform scale
-                    Model->scale(vec3(1.5, 0.25, 0.25));
+                    Model->scale(vec3(0.95, 0.25, 0.25));
                     glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
                     shape->draw(prog);
                 }
@@ -199,11 +217,16 @@ class Application : public EventCallbacks
             Projection->popMatrix();
             View->popMatrix();
 
-            // update shoulder angle - animate
-            //if (sTheta < 1.4)
-            //{
-                //sTheta += 0.01f;
-            //}
+            auto extract_sign = [](int a) { return a > 0 ? 1: -1; };
+
+            upperarm_rot = 1.4*sin(glfwGetTime());
+            if (std::abs(upperarm_rot) > 1)
+            {
+                upperarm_rot = extract_sign(upperarm_rot);
+            }
+            forearm_rot = 0.5*sin(glfwGetTime());
+            
+
         }
 };
 
