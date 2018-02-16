@@ -37,9 +37,11 @@ class Application : public EventCallbacks
 
         float upperarm_rot;
         float forearm_rot;
+        float hand_rot;
         float tmp;
 
         float x_disp = 0;
+        bool rot_arm = false;
 
         void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
         {
@@ -55,6 +57,10 @@ class Application : public EventCallbacks
             else if ( (key == GLFW_KEY_SEMICOLON || key == GLFW_KEY_O || key == GLFW_KEY_D) && action == GLFW_PRESS)
             {
                 x_disp += 0.1; 
+            }
+            else if (key == GLFW_KEY_C && action == GLFW_PRESS)
+            {
+                rot_arm = !rot_arm;
             }
         }
 
@@ -147,7 +153,7 @@ class Application : public EventCallbacks
                 Model->loadIdentity();
                 // draw the bottom cube with these 'global transforms'
                 Model->translate(vec3(x_disp, 0, -5));
-                Model->scale(vec3(0.75, 0.75, 0.75));
+                Model->scale(vec3(0.6, 0.6, 0.6));
                 glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
                 shape->draw(prog);
                 
@@ -156,17 +162,30 @@ class Application : public EventCallbacks
                 Model->pushMatrix();
                 {
                     // place at shoulder
-                    Model->translate(vec3(shoulder_disp, shoulder_disp + 0.1, 0));
+                    Model->translate(vec3(shoulder_disp - 0.1, shoulder_disp, 0));
                     // rotate shoulder joint
                     Model->rotate(upperarm_rot, vec3(0, 0, 1));
                     // move to shoulder joint
                     Model->translate(vec3(shoulder_x, 0, 0));
                     
+                    // Forearm
                     Model->pushMatrix();
                     {
                         Model->translate(vec3(0.9, 0, 0));
                         Model->rotate(forearm_rot, vec3(0, 0, 1));
                         Model->translate(vec3(0.4, 0, 0));
+
+                        // Hand
+                        Model->pushMatrix();
+                        {
+                            Model->translate(vec3(0.8, 0.0, 0));
+                            Model->rotate(hand_rot, vec3(0, 0, 1));
+                            Model->scale(0.25);
+                            glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+                            shape->draw(prog);
+                        }
+                        Model->popMatrix();
+
                         Model->scale(vec3(0.5, 0.25, 0.25));
                         glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
                         shape->draw(prog);
@@ -203,7 +222,7 @@ class Application : public EventCallbacks
                     // play with these options
                     Model->translate(vec3(x_disp, 1.1, -5));
                     Model->rotate(0.5, vec3(0, 1, 0));
-                    Model->scale(vec3(0.5, 0.5, 0.5));
+                    Model->scale(vec3(0.4, 0.4, 0.4));
                     glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
                     shape->draw(prog);
                 }
@@ -224,7 +243,12 @@ class Application : public EventCallbacks
             {
                 upperarm_rot = extract_sign(upperarm_rot);
             }
-            forearm_rot = 0.5*sin(glfwGetTime());
+
+            if (rot_arm)
+            {
+                forearm_rot = 0.5*sin(glfwGetTime());
+            }
+            hand_rot = 0.1*sin(glfwGetTime());
             
 
         }
