@@ -28,6 +28,7 @@ class Application : public EventCallbacks
 
         // Shape to be used (from obj file)
         shared_ptr<Shape> shape;
+        shared_ptr<Shape> sphere;
 
         // Contains vertex information for OpenGL
         GLuint VertexArrayID;
@@ -41,7 +42,8 @@ class Application : public EventCallbacks
         float tmp;
 
         float x_disp = 0;
-        bool rot_arm = false;
+        bool rot_forearm = false;
+        bool rot_arm = true;
 
         void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
         {
@@ -59,6 +61,10 @@ class Application : public EventCallbacks
                 x_disp += 0.1; 
             }
             else if (key == GLFW_KEY_C && action == GLFW_PRESS)
+            {
+                rot_forearm = !rot_forearm;
+            }
+            else if (key == GLFW_KEY_X && action == GLFW_PRESS)
             {
                 rot_arm = !rot_arm;
             }
@@ -112,6 +118,11 @@ class Application : public EventCallbacks
             shape->loadMesh(resourceDirectory + "/cube.obj");
             shape->resize();
             shape->init();
+
+            sphere = make_shared<Shape>();
+            sphere->loadMesh(resourceDirectory + "/sphere.obj");
+            sphere->resize();
+            sphere->init();
         }
 
         void render()
@@ -134,6 +145,7 @@ class Application : public EventCallbacks
 
             const static float shoulder_x = 1.0;
             const static float shoulder_disp = 1;
+            const static float left_shoulder_disp = -1.0;
 
             // Apply perspective projection.
             Projection->pushMatrix();
@@ -156,6 +168,38 @@ class Application : public EventCallbacks
                 Model->scale(vec3(0.6, 0.6, 0.6));
                 glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
                 shape->draw(prog);
+                
+                Model->pushMatrix();
+                {
+                    Model->translate(vec3(0, -1.2, 0));
+
+                    Model->pushMatrix();
+                    {
+                        Model->translate(vec3(0.9, -1.5, 0));
+                        Model->rotate(1.8, vec3(0, 0, 1));
+                        Model->scale(vec3(0.95, 0.25, 0.25));
+                        glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+                        shape->draw(prog);
+
+                    }
+                    Model->popMatrix();
+
+                    Model->pushMatrix();
+                    {
+                        Model->translate(vec3(-0.9, -1.5, 0));
+                        Model->rotate(1.4, vec3(0, 0, 1));
+                        Model->scale(vec3(0.95, 0.25, 0.25));
+                        glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+                        shape->draw(prog);
+                    }
+                    Model->popMatrix();
+
+                    Model->scale(1.2);
+                    glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+                    sphere->draw(prog);
+                }
+                Model->popMatrix();
+
                 
                 // draw the bottom cubes 'arm' - relative to the position of the bottom cube
                 // note you must change this to TWO jointed arm with hand
@@ -203,13 +247,38 @@ class Application : public EventCallbacks
                 Model->pushMatrix();
                 {
                     // place at shoulder
-                    Model->translate(vec3(-shoulder_disp - 0.2, shoulder_disp - 0.3, 0));
+                    Model->translate(vec3(left_shoulder_disp, -left_shoulder_disp + 0.1, 0));
                     // rotate shoulder joint
-                    Model->rotate(4.2, vec3(0, 0, 1));
+                    Model->rotate(1.15, vec3(0, 0, 1));
                     // move to shoulder joint
-                    Model->translate(vec3(shoulder_disp, 0, 0));
-                    // non-uniform scale
-                    Model->scale(vec3(1.5, 0.25, 0.25));
+                    Model->translate(vec3(left_shoulder_disp, 0, 0));
+                    
+                    // Forearm
+                    Model->pushMatrix();
+                    {
+                        Model->translate(vec3(-0.9, 0, 0));
+                        Model->rotate(0.3, vec3(0, 0, 1));
+                        //Model->rotate(0.0, vec3(0, 0, 1));
+                        Model->translate(vec3(-0.4, 0, 0));
+
+                        // Hand
+                        Model->pushMatrix();
+                        {
+                            Model->translate(vec3(-0.8, 0.0, 0));
+                            Model->rotate(0.2, vec3(0, 0, 1));
+                            Model->scale(0.25);
+                            glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+                            shape->draw(prog);
+                        }
+                        Model->popMatrix();
+
+                        Model->scale(vec3(0.5, 0.25, 0.25));
+                        glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+                        shape->draw(prog);
+                    }
+                    Model->popMatrix();
+                    
+                    Model->scale(vec3(0.95, 0.25, 0.25));
                     glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
                     shape->draw(prog);
                 }
@@ -238,18 +307,19 @@ class Application : public EventCallbacks
 
             auto extract_sign = [](int a) { return a > 0 ? 1: -1; };
 
-            upperarm_rot = 1.4*sin(glfwGetTime());
-            if (std::abs(upperarm_rot) > 1)
-            {
-                upperarm_rot = extract_sign(upperarm_rot);
+            if (rot_arm) {
+                upperarm_rot = 1.4*sin(glfwGetTime());
+                if (std::abs(upperarm_rot) > 1)
+                {
+                    upperarm_rot = extract_sign(upperarm_rot);
+                }
             }
 
-            if (rot_arm)
+            if (rot_forearm)
             {
-                forearm_rot = 0.5*sin(glfwGetTime());
+                forearm_rot = 0.5*sin(glfwGetTime()) + 0.7;
+                hand_rot = 0.1*sin(glfwGetTime());
             }
-            hand_rot = 0.1*sin(glfwGetTime());
-            
 
         }
 };
